@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -31,6 +32,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import icu.hku.tutorialdemo.ui.theme.TutorialDemoTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
+import okhttp3.Request
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -112,7 +118,21 @@ fun SendPost(key: String, secret: String, context: Context) {
             )
             Spacer(modifier = Modifier.padding(8.dp))
             Button(enabled = key.isNotEmpty(), onClick = {
-                //TODO: Send post
+                // Set the post data
+                val data = "message=$content&access_token=$key&access_token_secret=$secret"
+                val url = "https://<your_function_name>.azurewebsites.net/api/twitter/post?$data"
+
+                // Send the post request in a coroutine using OkHttp
+                CoroutineScope(Dispatchers.IO).launch {
+                    val client = OkHttpClient()
+                    val request = Request.Builder().url(url).get().build()
+                    val response = client.newCall(request).execute()
+
+                    // Toast the response code in the main thread
+                    CoroutineScope(Dispatchers.Main).launch {
+                        Toast.makeText(context, response.code.toString(), Toast.LENGTH_SHORT).show()
+                    }
+                }
             }) {
                 Text("Send Post")
             }
