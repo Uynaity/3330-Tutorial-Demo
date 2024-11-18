@@ -1,6 +1,8 @@
 package icu.hku.tutorialdemo
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -34,10 +36,15 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Get the data from the intent
+        val data: Uri? = intent?.data
+
         setContent {
             TutorialDemoTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
+                        data = data ?: Uri.EMPTY,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -68,7 +75,10 @@ fun GetToken(key: String, secret: String, context: Context) {
             )
             Spacer(modifier = Modifier.padding(8.dp))
             Button(onClick = {
-                //TODO: Get token
+                // Open the browser to get the token
+                val url = Uri.parse("https://<your_function_name>.azurewebsites.net/api/twitter/oauth")
+                val intent = Intent(Intent.ACTION_VIEW, url)
+                context.startActivity(intent)
             }) {
                 Text("Get Token")
             }
@@ -111,12 +121,12 @@ fun SendPost(key: String, secret: String, context: Context) {
 }
 
 @Composable
-fun Greeting(modifier: Modifier = Modifier) {
+fun Greeting(data: Uri, modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    //TODO: Get your key
-    var key by remember { mutableStateOf("") }
-    //TODO: Get your secret
-    var secret by remember { mutableStateOf("") }
+    // Set the key and secret from the query parameters
+    var key by remember { mutableStateOf(data.getQueryParameter("access_token") ?: "") }
+    var secret by remember { mutableStateOf(data.getQueryParameter("access_token_secret") ?: "") }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -134,6 +144,6 @@ fun Greeting(modifier: Modifier = Modifier) {
 @Composable
 fun GreetingPreview() {
     TutorialDemoTheme {
-        Greeting()
+        Greeting(Uri.EMPTY)
     }
 }
